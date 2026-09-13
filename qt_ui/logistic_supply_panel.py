@@ -23,8 +23,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -76,7 +76,7 @@ class SupplyBar(QWidget):
 
         pct = QLabel(f"{int(level * 100)}%")
         pct.setFixedWidth(36)
-        pct.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        pct.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         row.addWidget(pct)
 
     def _color(self, level: float) -> str:
