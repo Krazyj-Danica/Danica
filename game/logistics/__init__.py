@@ -270,6 +270,26 @@ class LogisticsTransfer:
     status:        TransferStatus  = TransferStatus.PLANNED
     delivered:     Optional[float] = None
 
+    def mark_in_flight(self) -> None:
+        """Called by LogisticsMissionGenerator once the flight has been
+        generated in the mission. Raises ValueError if the transfer isn't
+        in the PLANNED state (e.g. it was already marked, or cancelled)."""
+        if self.status != TransferStatus.PLANNED:
+            raise ValueError(
+                f"Cannot mark transfer {self.transfer_id} in_flight from "
+                f"status {self.status.value!r} (expected 'planned')"
+            )
+        self.status = TransferStatus.IN_FLIGHT
+
+    def mark_delivered(self, amount: Optional[float] = None) -> None:
+        """Called by debrief_hook.py once the mission ends successfully."""
+        self.status = TransferStatus.DELIVERED
+        self.delivered = amount if amount is not None else self.quantity
+
+    def mark_failed(self) -> None:
+        """Called when the flight is lost/aborted before delivering."""
+        self.status = TransferStatus.FAILED
+
 
 # ======================================================================
 # Logistics Manager
@@ -429,7 +449,9 @@ class LogisticsManager:
             ):
                 try:
                     from game.dcs.groundunittype import GroundUnitType
-                    for gut in GroundUnitType.each_unit_type():
+                    # GroundUnitType has no each_unit_type() classmethod —
+                    # the real registry is the private _by_name dict.
+                    for gut in GroundUnitType._by_name.values():
                         if getattr(gut, "variant_id", None) == item.clsid:
                             total += deficit * gut.price
                             break
